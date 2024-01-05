@@ -5,6 +5,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lapor_book/components/styles.dart';
 import 'package:lapor_book/models/akun.dart';
+import 'package:lapor_book/pages/all_laporan_page.dart';
+import 'package:lapor_book/pages/my_laporan_page.dart';
+import 'package:lapor_book/pages/profile_page.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -99,9 +102,9 @@ class _DashboardFull extends State<DashboardFull> {
   @override
   Widget build(BuildContext context) {
     pages = <Widget>[
-      // AllLaporan(akun: akun),
-      // MyLaporan(akun: akun),
-      // Profile(akun: akun),
+      AllLaporan(akun: akun),
+      MyLaporan(akun: akun),
+      Profile(akun: akun),
     ];
     return Scaffold(
       floatingActionButton: FloatingActionButton(
@@ -145,28 +148,7 @@ class _DashboardFull extends State<DashboardFull> {
           ? const Center(
               child: CircularProgressIndicator(),
             )
-          : Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Selamat Datang, ${akun.nama} !'),
-                  const SizedBox(
-                    height: 16,
-                  ),
-                  SizedBox(
-                    width: 128,
-                    child: FilledButton(
-                      style: buttonStyle,
-                      onPressed: () {
-                        keluar(context);
-                      },
-                      child: const Text('Logout',
-                          style: TextStyle(color: Colors.white, fontSize: 16)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          : pages.elementAt(_selectedIndex),
     );
   }
 }

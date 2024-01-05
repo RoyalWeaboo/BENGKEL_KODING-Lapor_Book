@@ -36,7 +36,8 @@ class AddFormState extends State<AddFormPage> {
 
   Image imagePreview() {
     if (file == null) {
-      return Image.asset('assets/istock-default.jpg', width: 180, height: 180);
+      return Image.asset('assets/image_placeholder.jpg',
+          width: 180, height: 180);
     } else {
       return Image.file(File(file!.path), width: 180, height: 180);
     }
@@ -204,18 +205,37 @@ class AddFormState extends State<AddFormPage> {
                         Container(
                           width: double.infinity,
                           margin: const EdgeInsets.only(bottom: 10),
-                          child: ElevatedButton(
-                              onPressed: () {
-                                uploadDialog(context);
-                              },
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(Icons.photo_camera),
-                                  Text(' Foto Pendukung',
-                                      style: headerStyle(level: 3)),
-                                ],
-                              )),
+                          child: FilledButton(
+                            style: buttonStyle,
+                            onPressed: () {
+                              uploadDialog(context);
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.photo_camera),
+                                const SizedBox(
+                                  width: 8,
+                                ),
+                                Text(
+                                  ' Foto Pendukung',
+                                  style: headerStyle(level: 4),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // child: ElevatedButton(
+                          //     onPressed: () {
+                          //       uploadDialog(context);
+                          //     },
+                          //     child: Row(
+                          //       mainAxisAlignment: MainAxisAlignment.center,
+                          //       children: [
+                          //         const Icon(Icons.photo_camera),
+                          //         Text(' Foto Pendukung',
+                          //             style: headerStyle(level: 3)),
+                          //       ],
+                          //     )),
                         ),
                         InputLayout(
                             'Instansi',
@@ -246,14 +266,15 @@ class AddFormState extends State<AddFormPage> {
                         SizedBox(
                           width: double.infinity,
                           child: FilledButton(
-                              style: buttonStyle,
-                              onPressed: () {
-                                addTransaksi(akun);
-                              },
-                              child: Text(
-                                'Kirim Laporan',
-                                style: headerStyle(level: 3, dark: false),
-                              )),
+                            style: buttonStyle,
+                            onPressed: () {
+                              addTransaksi(akun);
+                            },
+                            child: Text(
+                              'Kirim Laporan',
+                              style: headerStyle(level: 3, dark: false),
+                            ),
+                          ),
                         )
                       ],
                     ),
