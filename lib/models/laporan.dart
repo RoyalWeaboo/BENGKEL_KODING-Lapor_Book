@@ -10,6 +10,7 @@ class Laporan {
   final String status;
   final DateTime tanggal;
   final String maps;
+  final int like;
   List<Komentar>? komentar;
 
   Laporan({
@@ -23,6 +24,7 @@ class Laporan {
     required this.status,
     required this.tanggal,
     required this.maps,
+    required this.like,
     this.komentar,
   });
 }

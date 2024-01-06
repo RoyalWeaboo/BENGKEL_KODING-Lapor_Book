@@ -151,6 +151,7 @@ class AddFormState extends State<AddFormPage> {
         'status': 'Posted', // posted, process, done
         'tanggal': timestamp,
         'maps': maps,
+        'like': 0,
       }).catchError((e) {
         throw e;
       });

@@ -3,7 +3,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:lapor_book/components/styles.dart';
 import 'package:lapor_book/models/akun.dart';
 import 'package:lapor_book/models/laporan.dart';
@@ -34,6 +33,7 @@ class _ListItemState extends State<ListItem> {
       if (widget.laporan.gambar != '') {
         await _storage.refFromURL(widget.laporan.gambar!).delete();
       }
+      Navigator.pop(context);
       Navigator.popAndPushNamed(context, '/dashboard');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -101,10 +101,15 @@ class _ListItemState extends State<ListItem> {
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: const BoxDecoration(
                   border: Border.symmetric(horizontal: BorderSide(width: 2))),
-              child: Text(
-                widget.laporan.judul,
-                style: headerStyle(
-                  level: 4,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text(
+                  widget.laporan.judul,
+                  style: headerStyle(
+                    level: 4,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ),
@@ -144,9 +149,22 @@ class _ListItemState extends State<ListItem> {
                           border: const Border.symmetric(
                               vertical: BorderSide(width: 1))),
                       alignment: Alignment.center,
-                      child: Text(
-                        DateFormat('dd/MM/yyyy').format(widget.laporan.tanggal),
-                        style: headerStyle(level: 5, dark: false),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.thumb_up_alt_rounded,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                          const SizedBox(
+                            width: 8,
+                          ),
+                          Text(
+                            widget.laporan.like.toString(),
+                            style: headerStyle(level: 5, dark: false),
+                          ),
+                        ],
                       ),
                     ),
                   )

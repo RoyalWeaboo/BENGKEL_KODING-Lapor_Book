@@ -24,5 +24,5 @@ void main() async {
       '/add': (context) => const AddFormPage(),
       '/detail': (context) => const DetailPage(),
     },
-  ));
+  ),);
 }

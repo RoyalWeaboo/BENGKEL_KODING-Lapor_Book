@@ -1,3 +1,7 @@
+// ignore_for_file: use_build_context_synchronously
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lapor_book/components/status_dialog.dart';
@@ -13,8 +17,24 @@ class DetailPage extends StatefulWidget {
 }
 
 class _DetailPageState extends State<DetailPage> {
-  final bool _isLoading = false;
+  bool _isLoading = false;
+  bool _isLiked = false;
   String? status;
+  final _firestore = FirebaseFirestore.instance;
+  late Akun akun;
+  late Laporan laporan;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final arguments =
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+
+    laporan = arguments['laporan'];
+    akun = arguments['akun'];
+
+    checkLikeStatus(akun, laporan);
+  }
 
   Future launch(String uri) async {
     if (uri == '') return;
@@ -34,14 +54,93 @@ class _DetailPageState extends State<DetailPage> {
     );
   }
 
+  void checkLikeStatus(Akun akun, Laporan laporan) async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final DocumentSnapshot<Map<String, dynamic>> isLikedAlready =
+          await _firestore
+              .collection('laporan')
+              .doc(laporan.docId)
+              .collection('likedBy')
+              .doc(akun.docId)
+              .get();
+
+      if (isLikedAlready.exists) {
+        setState(() {
+          _isLiked = true;
+          print('is liked ke trigger');
+        });
+      } else {
+        setState(() {
+          _isLiked = false;
+          _isLoading = false;
+          print('not exist');
+        });
+      }
+    } catch (e) {
+      final snackbar = SnackBar(content: Text(e.toString()));
+      ScaffoldMessenger.of(context).showSnackBar(snackbar);
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void likePost(Akun akun, Laporan laporan) async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      CollectionReference laporanCollection = _firestore.collection('laporan');
+
+      CollectionReference likeCollection =
+          laporanCollection.doc(laporan.docId).collection('likedBy');
+      final likeId = likeCollection.doc().id;
+
+      Timestamp timestamp = Timestamp.fromDate(DateTime.now());
+
+      await laporanCollection.doc(laporan.docId).update({
+        'like': laporan.like + 1,
+      }).catchError((e) {
+        throw (e);
+      });
+
+      await likeCollection.doc(akun.docId).set({
+        'uid': akun.docId,
+        'docId': likeId,
+        'nama': akun.nama,
+        'noHp': akun.noHP,
+        'email': akun.email,
+        'role': akun.role,
+        'timestamp': timestamp,
+      }).catchError((e) {
+        throw e;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Anda menyukai laporan ini"),
+        ),
+      );
+
+      setState(() {
+        _isLiked = true;
+      });
+    } catch (e) {
+      final snackbar = SnackBar(content: Text(e.toString()));
+      ScaffoldMessenger.of(context).showSnackBar(snackbar);
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final arguments =
-        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-
-    Laporan laporan = arguments['laporan'];
-    Akun akun = arguments['akun'];
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: primaryColor,
@@ -88,12 +187,41 @@ class _DetailPageState extends State<DetailPage> {
                       ),
                       const SizedBox(height: 20),
                       ListTile(
+                        leading: const Icon(Icons.thumb_up_alt_rounded),
+                        title: Center(
+                          child: StreamBuilder<
+                                  DocumentSnapshot<Map<String, dynamic>>>(
+                              stream: FirebaseFirestore.instance
+                                  .collection('laporan')
+                                  .doc(laporan.docId)
+                                  .snapshots(),
+                              builder: (BuildContext context,
+                                  AsyncSnapshot<
+                                          DocumentSnapshot<
+                                              Map<String, dynamic>>>
+                                      snapshot) {
+                                if (snapshot.hasError) {
+                                  return const Text('Ada Kesalahan');
+                                }
+
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return const CircularProgressIndicator();
+                                }
+
+                                Map<String, dynamic> data = snapshot.data!
+                                    .data() as Map<String, dynamic>;
+                                return Text(
+                                    "Disukai oleh ${data['like']} orang");
+                              }),
+                        ),
+                      ),
+                      ListTile(
                         leading: const Icon(Icons.person),
                         title: const Center(child: Text('Nama Pelapor')),
                         subtitle: Center(
                           child: Text(laporan.nama),
                         ),
-                        trailing: const SizedBox(width: 45),
                       ),
                       ListTile(
                         leading: const Icon(Icons.date_range),
@@ -145,32 +273,50 @@ class _DetailPageState extends State<DetailPage> {
                 ),
               ),
       ),
+      floatingActionButton: _isLiked
+          ? const SizedBox()
+          : Padding(
+              padding: const EdgeInsets.all(
+                16,
+              ),
+              child: FloatingActionButton(
+                backgroundColor: primaryColor,
+                onPressed: () {
+                  likePost(akun, laporan);
+                },
+                child: const Icon(
+                  Icons.thumb_up_alt_rounded,
+                  color: Colors.white,
+                ),
+              ),
+            ),
     );
   }
 
   Container textStatus(String text, var bgcolor, var textcolor,
       {double? fontSize}) {
     return Container(
-        width: 150,
-        padding: const EdgeInsets.all(8),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-            color: bgcolor,
-            border: Border.all(width: 1, color: primaryColor),
-            borderRadius: BorderRadius.circular(16)),
-        child: fontSize != null
-            ? Text(
-                text,
-                style: TextStyle(
-                  color: textcolor,
-                ),
-              )
-            : Text(
-                text,
-                style: TextStyle(
-                  color: textcolor,
-                  fontSize: fontSize,
-                ),
-              ));
+      width: 150,
+      padding: const EdgeInsets.all(8),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+          color: bgcolor,
+          border: Border.all(width: 1, color: primaryColor),
+          borderRadius: BorderRadius.circular(16)),
+      child: fontSize != null
+          ? Text(
+              text,
+              style: TextStyle(
+                color: textcolor,
+              ),
+            )
+          : Text(
+              text,
+              style: TextStyle(
+                color: textcolor,
+                fontSize: fontSize,
+              ),
+            ),
+    );
   }
 }

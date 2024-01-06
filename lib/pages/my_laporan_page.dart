@@ -51,6 +51,7 @@ class _MyLaporanState extends State<MyLaporan> {
               gambar: documents.data()['gambar'],
               tanggal: documents['tanggal'].toDate(),
               maps: documents.data()['maps'],
+              like: documents.data()['like'],
               komentar: listKomentar,
             ),
           );
