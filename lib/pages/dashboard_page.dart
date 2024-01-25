@@ -3,11 +3,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:lapor_book/components/styles.dart';
 import 'package:lapor_book/models/akun.dart';
 import 'package:lapor_book/pages/all_laporan_page.dart';
 import 'package:lapor_book/pages/my_laporan_page.dart';
 import 'package:lapor_book/pages/profile_page.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -56,32 +58,72 @@ class _DashboardFull extends State<DashboardFull> {
     setState(() {
       _isLoading = true;
     });
-    try {
-      QuerySnapshot<Map<String, dynamic>> querySnapshot = await _firestore
-          .collection('akun')
-          .where('uid', isEqualTo: _auth.currentUser!.uid)
-          .limit(1)
-          .get();
 
-      if (querySnapshot.docs.isNotEmpty) {
-        var userData = querySnapshot.docs.first.data();
+    final connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.mobile ||
+        connectivityResult == ConnectivityResult.wifi ||
+        connectivityResult == ConnectivityResult.ethernet ||
+        connectivityResult == ConnectivityResult.vpn) {
+      try {
+        QuerySnapshot<Map<String, dynamic>> querySnapshot = await _firestore
+            .collection('akun')
+            .where('uid', isEqualTo: _auth.currentUser!.uid)
+            .limit(1)
+            .get();
 
+        if (querySnapshot.docs.isNotEmpty) {
+          var userData = querySnapshot.docs.first.data();
+
+          setState(() {
+            akun = Akun(
+              uid: userData['uid'],
+              nama: userData['nama'],
+              noHP: userData['noHP'],
+              email: userData['email'],
+              docId: userData['docId'],
+              role: userData['role'],
+            );
+          });
+        }
+      } catch (e) {
+        final snackbar = SnackBar(content: Text(e.toString()));
+        ScaffoldMessenger.of(context).showSnackBar(snackbar);
+      } finally {
         setState(() {
-          akun = Akun(
-            uid: userData['uid'],
-            nama: userData['nama'],
-            noHP: userData['noHP'],
-            email: userData['email'],
-            docId: userData['docId'],
-            role: userData['role'],
-          );
+          _isLoading = false;
         });
       }
-    } catch (e) {
-      final snackbar = SnackBar(content: Text(e.toString()));
-      ScaffoldMessenger.of(context).showSnackBar(snackbar);
-      print(e);
-    } finally {
+    } else if (connectivityResult == ConnectivityResult.none) {
+      showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            icon: const Icon(
+              Icons.signal_cellular_connected_no_internet_0_bar_outlined,
+              color: Colors.red,
+              size: 24,
+            ),
+            title: Text(
+              "Tidak ada koneksi Internet",
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                color: blackColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            content: Text(
+              "Aplikasi Lapor Book memerlukan koneksi internet agar berjalan dengan baik",
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: blackColor,
+                fontWeight: FontWeight.w400,
+              ),
+              textAlign: TextAlign.justify,
+            ),
+          );
+        },
+      );
       setState(() {
         _isLoading = false;
       });
@@ -109,6 +151,8 @@ class _DashboardFull extends State<DashboardFull> {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         backgroundColor: primaryColor,
+        foregroundColor: whiteColor,
+        shape: const CircleBorder(),
         child: const Icon(Icons.add, size: 35),
         onPressed: () {
           Navigator.pushNamed(context, '/add', arguments: {
@@ -119,7 +163,13 @@ class _DashboardFull extends State<DashboardFull> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: primaryColor,
-        title: Text('Lapor Book', style: headerStyle(level: 2)),
+        title: Text(
+          'Lapor Book',
+          style: headerStyle(
+            level: 2,
+            dark: false,
+          ),
+        ),
         centerTitle: true,
       ),
       bottomNavigationBar: BottomNavigationBar(

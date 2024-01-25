@@ -2,10 +2,12 @@
 
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lapor_book/components/styles.dart';
 import 'package:lapor_book/components/vars.dart';
@@ -83,7 +85,11 @@ class AddFormState extends State<AddFormPage> {
   Future<Position> getCurrentLocation() async {
     bool isServiceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!isServiceEnabled) {
-      return Future.error('Location services are disabled.');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Layanan Lokasi Belum Aktif"),
+        ),
+      );
     }
 
     LocationPermission permission = await Geolocator.checkPermission();
@@ -91,13 +97,18 @@ class AddFormState extends State<AddFormPage> {
       permission = await Geolocator.requestPermission();
 
       if (permission == LocationPermission.denied) {
-        return Future.error('Location permissions are denied');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content:
+                Text("Perizinan lokasi diperlukan untuk memposting laporan"),
+          ),
+        );
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
       return Future.error(
-          'Location permissions are permantly denied, we cannot request permissions.');
+          'Perizinan lokasi ditolak permanen, tidak dapat memproses permintaan.');
     }
 
     return await Geolocator.getCurrentPosition();
@@ -125,41 +136,81 @@ class AddFormState extends State<AddFormPage> {
     setState(() {
       _isLoading = true;
     });
-    try {
-      CollectionReference laporanCollection = _firestore.collection('laporan');
+    final connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.mobile ||
+        connectivityResult == ConnectivityResult.wifi ||
+        connectivityResult == ConnectivityResult.ethernet ||
+        connectivityResult == ConnectivityResult.vpn) {
+      try {
+        CollectionReference laporanCollection =
+            _firestore.collection('laporan');
 
-      // Convert DateTime to Firestore Timestamp
-      Timestamp timestamp = Timestamp.fromDate(DateTime.now());
+        Timestamp timestamp = Timestamp.fromDate(DateTime.now());
 
-      String url = await uploadImage();
+        String url = await uploadImage();
 
-      String currentLocation = await getCurrentLocation().then((value) {
-        return '${value.latitude},${value.longitude}';
-      });
+        String currentLocation = await getCurrentLocation().then((value) {
+          return '${value.latitude},${value.longitude}';
+        });
 
-      String maps = 'https://www.google.com/maps/place/$currentLocation';
-      final id = laporanCollection.doc().id;
+        String maps = 'https://www.google.com/maps/place/$currentLocation';
+        final id = laporanCollection.doc().id;
 
-      await laporanCollection.doc(id).set({
-        'uid': _auth.currentUser!.uid,
-        'docId': id,
-        'judul': judul,
-        'instansi': instansi,
-        'deskripsi': deskripsi,
-        'gambar': url,
-        'nama': akun.nama,
-        'status': 'Posted', // posted, process, done
-        'tanggal': timestamp,
-        'maps': maps,
-        'like': 0,
-      }).catchError((e) {
-        throw e;
-      });
-      Navigator.popAndPushNamed(context, '/dashboard');
-    } catch (e) {
-      final snackbar = SnackBar(content: Text(e.toString()));
-      ScaffoldMessenger.of(context).showSnackBar(snackbar);
-    } finally {
+        await laporanCollection.doc(id).set({
+          'uid': _auth.currentUser!.uid,
+          'docId': id,
+          'judul': judul,
+          'instansi': instansi,
+          'deskripsi': deskripsi,
+          'gambar': url,
+          'nama': akun.nama,
+          'status': 'Posted', // posted, process, done
+          'tanggal': timestamp,
+          'maps': maps,
+          'komentar': [],
+        }).catchError((e) {
+          throw e;
+        });
+        Navigator.popAndPushNamed(context, '/dashboard');
+      } catch (e) {
+        final snackbar = SnackBar(content: Text(e.toString()));
+        ScaffoldMessenger.of(context).showSnackBar(snackbar);
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } else if (connectivityResult == ConnectivityResult.none) {
+      showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            icon: const Icon(
+              Icons.signal_cellular_connected_no_internet_0_bar_outlined,
+              color: Colors.red,
+              size: 24,
+            ),
+            title: Text(
+              "Tidak ada koneksi Internet",
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                color: blackColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            content: Text(
+              "Aplikasi Lapor Book memerlukan koneksi internet agar berjalan dengan baik",
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: blackColor,
+                fontWeight: FontWeight.w400,
+              ),
+              textAlign: TextAlign.justify,
+            ),
+          );
+        },
+      );
       setState(() {
         _isLoading = false;
       });
@@ -220,7 +271,7 @@ class AddFormState extends State<AddFormPage> {
                                 ),
                                 Text(
                                   ' Foto Pendukung',
-                                  style: headerStyle(level: 4),
+                                  style: headerStyle(level: 4, dark: false),
                                 ),
                               ],
                             ),

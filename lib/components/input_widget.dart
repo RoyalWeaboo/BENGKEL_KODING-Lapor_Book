@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'styles.dart';
 
 class InputLayout extends StatelessWidget {
@@ -16,7 +17,14 @@ class InputLayout extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: headerStyle(level: 3)),
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 16,
+            color: blackColor,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         const SizedBox(height: 5),
         Container(
           child: inputField,

@@ -1,9 +1,10 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:lapor_book/components/comment_dialog.dart';
 import 'package:lapor_book/components/status_dialog.dart';
 import 'package:lapor_book/components/styles.dart';
 import 'package:lapor_book/models/akun.dart';
@@ -18,7 +19,7 @@ class DetailPage extends StatefulWidget {
 
 class _DetailPageState extends State<DetailPage> {
   bool _isLoading = false;
-  bool _isLiked = false;
+  bool _isCommented = false;
   String? status;
   final _firestore = FirebaseFirestore.instance;
   late Akun akun;
@@ -32,8 +33,6 @@ class _DetailPageState extends State<DetailPage> {
 
     laporan = arguments['laporan'];
     akun = arguments['akun'];
-
-    checkLikeStatus(akun, laporan);
   }
 
   Future launch(String uri) async {
@@ -54,89 +53,16 @@ class _DetailPageState extends State<DetailPage> {
     );
   }
 
-  void checkLikeStatus(Akun akun, Laporan laporan) async {
-    setState(() {
-      _isLoading = true;
-    });
-    try {
-      final DocumentSnapshot<Map<String, dynamic>> isLikedAlready =
-          await _firestore
-              .collection('laporan')
-              .doc(laporan.docId)
-              .collection('likedBy')
-              .doc(akun.docId)
-              .get();
-
-      if (isLikedAlready.exists) {
-        setState(() {
-          _isLiked = true;
-          print('is liked ke trigger');
-        });
-      } else {
-        setState(() {
-          _isLiked = false;
-          _isLoading = false;
-          print('not exist');
-        });
-      }
-    } catch (e) {
-      final snackbar = SnackBar(content: Text(e.toString()));
-      ScaffoldMessenger.of(context).showSnackBar(snackbar);
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  void likePost(Akun akun, Laporan laporan) async {
-    setState(() {
-      _isLoading = true;
-    });
-    try {
-      CollectionReference laporanCollection = _firestore.collection('laporan');
-
-      CollectionReference likeCollection =
-          laporanCollection.doc(laporan.docId).collection('likedBy');
-      final likeId = likeCollection.doc().id;
-
-      Timestamp timestamp = Timestamp.fromDate(DateTime.now());
-
-      await laporanCollection.doc(laporan.docId).update({
-        'like': laporan.like + 1,
-      }).catchError((e) {
-        throw (e);
-      });
-
-      await likeCollection.doc(akun.docId).set({
-        'uid': akun.docId,
-        'docId': likeId,
-        'nama': akun.nama,
-        'noHp': akun.noHP,
-        'email': akun.email,
-        'role': akun.role,
-        'timestamp': timestamp,
-      }).catchError((e) {
-        throw e;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Anda menyukai laporan ini"),
-        ),
-      );
-
-      setState(() {
-        _isLiked = true;
-      });
-    } catch (e) {
-      final snackbar = SnackBar(content: Text(e.toString()));
-      ScaffoldMessenger.of(context).showSnackBar(snackbar);
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+  void commentDialog(Laporan laporan, Akun akun) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return CommentDialog(
+          laporan: laporan,
+          akun: akun,
+        );
+      },
+    );
   }
 
   @override
@@ -147,6 +73,7 @@ class _DetailPageState extends State<DetailPage> {
         title:
             Text('Detail Laporan', style: headerStyle(level: 3, dark: false)),
         centerTitle: true,
+        automaticallyImplyLeading: false,
       ),
       body: SafeArea(
         child: _isLoading
@@ -187,56 +114,72 @@ class _DetailPageState extends State<DetailPage> {
                       ),
                       const SizedBox(height: 20),
                       ListTile(
-                        leading: const Icon(Icons.thumb_up_alt_rounded),
-                        title: Center(
-                          child: StreamBuilder<
-                                  DocumentSnapshot<Map<String, dynamic>>>(
-                              stream: FirebaseFirestore.instance
-                                  .collection('laporan')
-                                  .doc(laporan.docId)
-                                  .snapshots(),
-                              builder: (BuildContext context,
-                                  AsyncSnapshot<
-                                          DocumentSnapshot<
-                                              Map<String, dynamic>>>
-                                      snapshot) {
-                                if (snapshot.hasError) {
-                                  return const Text('Ada Kesalahan');
-                                }
-
-                                if (snapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  return const CircularProgressIndicator();
-                                }
-
-                                Map<String, dynamic> data = snapshot.data!
-                                    .data() as Map<String, dynamic>;
-                                return Text(
-                                    "Disukai oleh ${data['like']} orang");
-                              }),
-                        ),
-                      ),
-                      ListTile(
                         leading: const Icon(Icons.person),
-                        title: const Center(child: Text('Nama Pelapor')),
+                        title: Center(
+                            child: Text(
+                          'Nama Pelapor',
+                          style: GoogleFonts.inter(
+                            fontSize: 15,
+                            color: blackColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        )),
                         subtitle: Center(
-                          child: Text(laporan.nama),
+                          child: Text(
+                            laporan.nama,
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              color: blackColor,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                        trailing: const SizedBox(
+                          width: 24,
                         ),
                       ),
                       ListTile(
                         leading: const Icon(Icons.date_range),
-                        title: const Center(child: Text('Tanggal Laporan')),
+                        title: Center(
+                            child: Text(
+                          'Tanggal Laporan',
+                          style: GoogleFonts.inter(
+                            fontSize: 15,
+                            color: blackColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        )),
                         subtitle: Center(
-                            child: Text(DateFormat('dd MMMM yyyy')
-                                .format(laporan.tanggal))),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.location_on),
-                          onPressed: () {
-                            launch(laporan.maps);
-                          },
+                          child: Text(
+                            DateFormat('dd MMMM yyyy').format(laporan.tanggal),
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              color: blackColor,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                        trailing: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            InkWell(
+                              child: const Icon(Icons.location_on),
+                              onTap: () {
+                                launch(laporan.maps);
+                              },
+                            ),
+                            Text(
+                              "Lokasi",
+                              style: GoogleFonts.inter(
+                                fontSize: 10,
+                                color: blackColor,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 50),
+                      const SizedBox(height: 48),
                       Text(
                         'Deskripsi Laporan',
                         style: headerStyle(level: 3),
@@ -249,47 +192,112 @@ class _DetailPageState extends State<DetailPage> {
                       ),
                       const SizedBox(height: 20),
                       if (akun.role == 'admin')
-                        SizedBox(
-                          width: 250,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                status = laporan.status;
-                              });
-                              statusDialog(laporan);
-                            },
-                            style: TextButton.styleFrom(
-                              foregroundColor: Colors.white,
-                              backgroundColor: primaryColor,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
+                        Column(
+                          children: [
+                            SizedBox(
+                              width: 250,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    status = laporan.status;
+                                  });
+                                  statusDialog(laporan);
+                                },
+                                style: TextButton.styleFrom(
+                                  foregroundColor: Colors.white,
+                                  backgroundColor: primaryColor,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                child: const Text('Ubah Status'),
                               ),
                             ),
-                            child: const Text('Ubah Status'),
-                          ),
+                            const SizedBox(height: 8),
+                          ],
                         ),
+                      SizedBox(
+                        width: 250,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            commentDialog(laporan, akun);
+                          },
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            backgroundColor: primaryColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: const Text('Tambah Komentar'),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      (laporan.komentar ?? []).isNotEmpty
+                          ? Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'List Komentar',
+                                  style: headerStyle(level: 3),
+                                ),
+                                const SizedBox(height: 20),
+                                ListView.separated(
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  shrinkWrap: true,
+                                  itemCount: laporan.komentar?.length ?? 0,
+                                  itemBuilder: (context, index) {
+                                    return Card(
+                                      color: primaryColor,
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 8,
+                                          horizontal: 16,
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              laporan.komentar![index].nama,
+                                              style: GoogleFonts.inter(
+                                                fontSize: 15,
+                                                color: whiteColor,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            const SizedBox(
+                                              height: 4,
+                                            ),
+                                            Text(
+                                              laporan.komentar![index].isi,
+                                              style: GoogleFonts.inter(
+                                                fontSize: 13,
+                                                color: whiteColor,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                              textAlign: TextAlign.justify,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  separatorBuilder:
+                                      (BuildContext context, int index) {
+                                    return const SizedBox(
+                                      height: 8,
+                                    );
+                                  },
+                                ),
+                              ],
+                            )
+                          : const SizedBox(),
                     ],
                   ),
                 ),
               ),
       ),
-      floatingActionButton: _isLiked
-          ? const SizedBox()
-          : Padding(
-              padding: const EdgeInsets.all(
-                16,
-              ),
-              child: FloatingActionButton(
-                backgroundColor: primaryColor,
-                onPressed: () {
-                  likePost(akun, laporan);
-                },
-                child: const Icon(
-                  Icons.thumb_up_alt_rounded,
-                  color: Colors.white,
-                ),
-              ),
-            ),
     );
   }
 

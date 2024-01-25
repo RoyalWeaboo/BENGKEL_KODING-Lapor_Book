@@ -1,7 +1,9 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:lapor_book/components/input_widget.dart';
 import 'package:lapor_book/components/styles.dart';
 import 'package:lapor_book/components/validators.dart';
@@ -36,32 +38,72 @@ class _RegisterPageState extends State<RegisterPage> {
     setState(() {
       _isLoading = true;
     });
-    try {
-      CollectionReference akunCollection = _db.collection('akun');
+    final connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.mobile ||
+        connectivityResult == ConnectivityResult.wifi ||
+        connectivityResult == ConnectivityResult.ethernet ||
+        connectivityResult == ConnectivityResult.vpn) {
+      try {
+        CollectionReference akunCollection = _db.collection('akun');
 
-      final password = _password.text;
-      await _auth.createUserWithEmailAndPassword(
-          email: email!, password: password);
+        final password = _password.text;
+        await _auth.createUserWithEmailAndPassword(
+            email: email!, password: password);
 
-      final docId = akunCollection.doc().id;
-      await akunCollection.doc(docId).set({
-        'uid': _auth.currentUser!.uid,
-        'nama': nama,
-        'email': email,
-        'noHP': noHP,
-        'docId': docId,
-        'role': 'user',
-      });
+        final docId = akunCollection.doc().id;
+        await akunCollection.doc(docId).set({
+          'uid': _auth.currentUser!.uid,
+          'nama': nama,
+          'email': email,
+          'noHP': noHP,
+          'docId': docId,
+          'role': 'user',
+        });
 
-      Navigator.pushReplacementNamed(
-        context,
-        '/login',
+        Navigator.pushReplacementNamed(
+          context,
+          '/login',
+        );
+      } catch (e) {
+        final snackbar = SnackBar(content: Text(e.toString()));
+        ScaffoldMessenger.of(context).showSnackBar(snackbar);
+        print(e);
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } else if (connectivityResult == ConnectivityResult.none) {
+      showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            icon: const Icon(
+              Icons.signal_cellular_connected_no_internet_0_bar_outlined,
+              color: Colors.red,
+              size: 24,
+            ),
+            title: Text(
+              "Tidak ada koneksi Internet",
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                color: blackColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            content: Text(
+              "Aplikasi Lapor Book memerlukan koneksi internet agar berjalan dengan baik",
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: blackColor,
+                fontWeight: FontWeight.w400,
+              ),
+              textAlign: TextAlign.justify,
+            ),
+          );
+        },
       );
-    } catch (e) {
-      final snackbar = SnackBar(content: Text(e.toString()));
-      ScaffoldMessenger.of(context).showSnackBar(snackbar);
-      print(e);
-    } finally {
       setState(() {
         _isLoading = false;
       });
@@ -101,9 +143,13 @@ class _RegisterPageState extends State<RegisterPage> {
                                     nama = value;
                                   },
                                 ),
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  color: blackColor,
+                                  fontWeight: FontWeight.w400,
+                                ),
                                 validator: notEmptyValidator,
-                                decoration:
-                                    customInputDecoration("Nama Lengkap"),
+                                decoration: customInputDecoration(""),
                               ),
                             ),
                             InputLayout(
@@ -114,9 +160,13 @@ class _RegisterPageState extends State<RegisterPage> {
                                     email = value;
                                   },
                                 ),
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  color: blackColor,
+                                  fontWeight: FontWeight.w400,
+                                ),
                                 validator: notEmptyValidator,
-                                decoration:
-                                    customInputDecoration("email@email.com"),
+                                decoration: customInputDecoration(""),
                               ),
                             ),
                             InputLayout(
@@ -127,9 +177,13 @@ class _RegisterPageState extends State<RegisterPage> {
                                     noHP = value;
                                   },
                                 ),
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  color: blackColor,
+                                  fontWeight: FontWeight.w400,
+                                ),
                                 validator: notEmptyValidator,
-                                decoration:
-                                    customInputDecoration("+62 80000000"),
+                                decoration: customInputDecoration(""),
                               ),
                             ),
                             InputLayout(
@@ -155,8 +209,13 @@ class _RegisterPageState extends State<RegisterPage> {
                               width: double.infinity,
                               child: FilledButton(
                                 style: buttonStyle,
-                                child: Text('Register',
-                                    style: headerStyle(level: 2)),
+                                child: Text(
+                                  'Register',
+                                  style: headerStyle(
+                                    level: 3,
+                                    dark: false,
+                                  ),
+                                ),
                                 onPressed: () {
                                   if (_formKey.currentState!.validate()) {
                                     register();
@@ -177,9 +236,13 @@ class _RegisterPageState extends State<RegisterPage> {
                           onTap: () {
                             Navigator.pushNamed(context, '/login');
                           },
-                          child: const Text(
-                            'Login di sini',
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                          child: Text(
+                            'Login Sekarang',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              color: primaryColor,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ],

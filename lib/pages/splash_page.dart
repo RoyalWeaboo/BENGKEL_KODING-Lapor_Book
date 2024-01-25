@@ -31,7 +31,7 @@ class _SplashPage extends State<SplashFull> {
       });
     } else {
       Future.delayed(Duration.zero, () {
-        Navigator.pushReplacementNamed(context, '/register');
+        Navigator.pushReplacementNamed(context, '/login');
       });
     }
   }
@@ -41,7 +41,7 @@ class _SplashPage extends State<SplashFull> {
     return const MaterialApp(
         home: Scaffold(
       body: Center(
-        child: Text('Selamat datang di Aplikasi Laporan'),
+        child: Text('Selamat datang di Aplikasi Lapor Book'),
       ),
     ));
   }

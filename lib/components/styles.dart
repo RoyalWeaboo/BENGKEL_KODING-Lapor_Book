@@ -5,6 +5,8 @@ var warningColor = const Color(0xFFE9C46A);
 var dangerColor = const Color(0xFFE76F51);
 var successColor = const Color(0xFF2A9D8F);
 var greyColor = const Color(0xFFAFAFAF);
+var blackColor = const Color(0xff000000);
+var whiteColor = const Color(0xffffffff);
 
 TextStyle headerStyle({int level = 1, bool dark = true}) {
   List<double> levelSize = [30, 24, 20, 16, 12];
@@ -15,5 +17,8 @@ TextStyle headerStyle({int level = 1, bool dark = true}) {
 }
 
 var buttonStyle = ElevatedButton.styleFrom(
-    padding: const EdgeInsets.symmetric(vertical: 15),
-    backgroundColor: primaryColor);
+  padding: const EdgeInsets.symmetric(
+    vertical: 8,
+  ),
+  backgroundColor: primaryColor,
+);

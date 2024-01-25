@@ -1,6 +1,8 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../components/input_widget.dart';
 import '../components/styles.dart';
 import '../components/validators.dart';
@@ -22,40 +24,62 @@ class LoginPageState extends State<LoginPage> {
   String? email;
   String? password;
 
-  @override
-  void initState() {
-    super.initState();
-    User? user = _auth.currentUser;
-
-    if (user != null) {
-      Future.delayed(Duration.zero, () {
-        Navigator.pushReplacementNamed(context, '/dashboard');
-      });
-    }
-    // else {
-    //   Future.delayed(Duration.zero, () {
-    //     Navigator.pushReplacementNamed(context, '/login');
-    //   });
-    // }
-  }
-
   void login() async {
     setState(() {
       _isLoading = true;
     });
+    final connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.mobile ||
+        connectivityResult == ConnectivityResult.wifi ||
+        connectivityResult == ConnectivityResult.ethernet ||
+        connectivityResult == ConnectivityResult.vpn) {
+      try {
+        await _auth.signInWithEmailAndPassword(
+            email: email!, password: password!);
 
-    try {
-      await _auth.signInWithEmailAndPassword(
-          email: email!, password: password!);
-
-      Navigator.pushReplacementNamed(
-        context,
-        '/dashboard',
+        Navigator.pushReplacementNamed(
+          context,
+          '/dashboard',
+        );
+      } catch (e) {
+        final snackbar = SnackBar(content: Text(e.toString()));
+        ScaffoldMessenger.of(context).showSnackBar(snackbar);
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } else if (connectivityResult == ConnectivityResult.none) {
+      showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            icon: const Icon(
+              Icons.signal_cellular_connected_no_internet_0_bar_outlined,
+              color: Colors.red,
+              size: 24,
+            ),
+            title: Text(
+              "Tidak ada koneksi Internet",
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                color: blackColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            content: Text(
+              "Aplikasi Lapor Book memerlukan koneksi internet agar berjalan dengan baik",
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: blackColor,
+                fontWeight: FontWeight.w400,
+              ),
+              textAlign: TextAlign.justify,
+            ),
+          );
+        },
       );
-    } catch (e) {
-      final snackbar = SnackBar(content: Text(e.toString()));
-      ScaffoldMessenger.of(context).showSnackBar(snackbar);
-    } finally {
       setState(() {
         _isLoading = false;
       });
@@ -75,7 +99,10 @@ class LoginPageState extends State<LoginPage> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const SizedBox(height: 80),
-                    Text('Login', style: headerStyle(level: 1)),
+                    Text(
+                      'Login',
+                      style: headerStyle(level: 1),
+                    ),
                     const Text(
                       'Login to your account',
                       style: TextStyle(color: Colors.grey),
@@ -88,31 +115,50 @@ class LoginPageState extends State<LoginPage> {
                           child: Column(
                             children: [
                               InputLayout(
-                                  'Email',
-                                  TextFormField(
-                                      onChanged: (String value) => setState(() {
-                                            email = value;
-                                          }),
-                                      validator: notEmptyValidator,
-                                      decoration: customInputDecoration(
-                                          "email@email.com"))),
+                                'Email',
+                                TextFormField(
+                                  onChanged: (String value) => setState(() {
+                                    email = value;
+                                  }),
+                                  validator: notEmptyValidator,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    color: blackColor,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                  decoration: customInputDecoration(""),
+                                ),
+                              ),
                               InputLayout(
-                                  'Password',
-                                  TextFormField(
-                                      onChanged: (String value) => setState(() {
-                                            password = value;
-                                          }),
-                                      validator: notEmptyValidator,
-                                      obscureText: true,
-                                      decoration: customInputDecoration(""))),
+                                'Password',
+                                TextFormField(
+                                  onChanged: (String value) => setState(() {
+                                    password = value;
+                                  }),
+                                  validator: notEmptyValidator,
+                                  obscureText: true,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    color: blackColor,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                  decoration: customInputDecoration(""),
+                                ),
+                              ),
                               Container(
-                                margin: const EdgeInsets.only(top: 20),
+                                margin: const EdgeInsets.only(
+                                  top: 20,
+                                ),
                                 width: double.infinity,
                                 child: FilledButton(
                                     style: buttonStyle,
-                                    child: Text('Login',
-                                        style:
-                                            headerStyle(level: 3, dark: false)),
+                                    child: Text(
+                                      'Login',
+                                      style: headerStyle(
+                                        level: 3,
+                                        dark: false,
+                                      ),
+                                    ),
                                     onPressed: () {
                                       if (_formKey.currentState!.validate()) {
                                         login();
@@ -130,11 +176,23 @@ class LoginPageState extends State<LoginPage> {
                         InkWell(
                           onTap: () =>
                               Navigator.pushNamed(context, '/register'),
-                          child: const Text('Daftar di sini',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          child: Text(
+                            'Daftar Sekarang',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              color: primaryColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         )
                       ],
-                    )
+                    ),
+                    Image(
+                      image: const AssetImage(
+                        "assets/login_assets.jpg",
+                      ),
+                      width: MediaQuery.of(context).size.width * 0.75,
+                    ),
                   ],
                 ),
               ),

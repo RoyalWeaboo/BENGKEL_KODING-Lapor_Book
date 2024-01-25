@@ -3,6 +3,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:lapor_book/components/styles.dart';
 import 'package:lapor_book/models/akun.dart';
 import 'package:lapor_book/models/laporan.dart';
@@ -84,17 +85,15 @@ class _ListItemState extends State<ListItem> {
         },
         child: Column(
           children: [
-            widget.laporan.gambar != ''
-                ? Image.network(
-                    widget.laporan.gambar!,
-                    width: 130,
-                    height: 130,
-                  )
-                : Image.asset(
-                    'assets/no_image_placeholder.png',
-                    width: 130,
-                    height: 130,
-                  ),
+            Expanded(
+              child: widget.laporan.gambar != ''
+                  ? Image.network(
+                      widget.laporan.gambar!,
+                    )
+                  : Image.asset(
+                      'assets/no_image_placeholder.png',
+                    ),
+            ),
             Container(
               width: double.infinity,
               alignment: Alignment.center,
@@ -113,64 +112,63 @@ class _ListItemState extends State<ListItem> {
                 ),
               ),
             ),
-            Expanded(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      decoration: BoxDecoration(
-                          color: widget.laporan.status == 'Posted'
-                              ? warningColor
-                              : widget.laporan.status == 'On Process'
-                                  ? Colors.green
-                                  : widget.laporan.status == 'Done'
-                                      ? Colors.blue
-                                      : dangerColor,
-                          // borderRadius: const BorderRadius.only(
-                          //   bottomLeft: Radius.circular(5),
-                          // ),
-                          border: const Border.symmetric(
-                              vertical: BorderSide(width: 1))),
-                      alignment: Alignment.center,
-                      child: Text(
-                        widget.laporan.status,
-                        style: headerStyle(level: 5, dark: false),
-                      ),
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                        color: widget.laporan.status == 'Posted'
+                            ? warningColor
+                            : widget.laporan.status == 'On Process'
+                                ? Colors.green
+                                : widget.laporan.status == 'Done'
+                                    ? Colors.blue
+                                    : dangerColor,
+                        // borderRadius: const BorderRadius.only(
+                        //   bottomLeft: Radius.circular(5),
+                        // ),
+                        border: const Border.symmetric(
+                            vertical: BorderSide(width: 1))),
+                    alignment: Alignment.center,
+                    child: Text(
+                      widget.laporan.status,
+                      style: headerStyle(level: 5, dark: false),
                     ),
                   ),
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      decoration: BoxDecoration(
-                          color: primaryColor,
-                          // borderRadius: const BorderRadius.only(
-                          //     bottomRight: Radius.circular(5)),
-                          border: const Border.symmetric(
-                              vertical: BorderSide(width: 1))),
-                      alignment: Alignment.center,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.thumb_up_alt_rounded,
-                            color: Colors.white,
-                            size: 16,
-                          ),
-                          const SizedBox(
-                            width: 8,
-                          ),
-                          Text(
-                            widget.laporan.like.toString(),
-                            style: headerStyle(level: 5, dark: false),
-                          ),
-                        ],
-                      ),
+                ),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                        color: primaryColor,
+                        // borderRadius: const BorderRadius.only(
+                        //     bottomRight: Radius.circular(5)),
+                        border: const Border.symmetric(
+                            vertical: BorderSide(width: 1))),
+                    alignment: Alignment.center,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.date_range,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                        const SizedBox(
+                          width: 8,
+                        ),
+                        Text(
+                          DateFormat('dd/MM/yyyy')
+                              .format(widget.laporan.tanggal),
+                          style: headerStyle(level: 5, dark: false),
+                        ),
+                      ],
                     ),
-                  )
-                ],
-              ),
-            )
+                  ),
+                )
+              ],
+            ),
           ],
         ),
       ),

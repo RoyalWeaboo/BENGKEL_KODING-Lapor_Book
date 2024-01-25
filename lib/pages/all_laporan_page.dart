@@ -31,9 +31,9 @@ class _AllLaporanState extends State<AllLaporan> {
 
           List<Komentar>? listKomentar = komentarData?.map((map) {
             return Komentar(
-              nama: map['nama'],
-              isi: map['isi'],
-            );
+                nama: map['nama'],
+                isi: map['isi'],
+                timestamp: map['timestamp']);
           }).toList();
 
           listLaporan.add(
@@ -48,7 +48,6 @@ class _AllLaporanState extends State<AllLaporan> {
               gambar: documents.data()['gambar'],
               tanggal: documents['tanggal'].toDate(),
               maps: documents.data()['maps'],
-              like: documents.data()['like'],
               komentar: listKomentar,
             ),
           );
@@ -69,13 +68,12 @@ class _AllLaporanState extends State<AllLaporan> {
     return SafeArea(
       child: Container(
         width: double.infinity,
-        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         child: GridView.builder(
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
+              crossAxisCount: 1,
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
-              childAspectRatio: 1 / 1.234,
             ),
             itemCount: listLaporan.length,
             itemBuilder: (context, index) {

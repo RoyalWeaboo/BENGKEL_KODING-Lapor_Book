@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 String? notEmptyValidator(var value) {
   if (value == null || value.isEmpty) {
-    return "Isian tidak boleh kosong";
+    return "Form tidak boleh kosong";
   } else {
     return null;
   }
