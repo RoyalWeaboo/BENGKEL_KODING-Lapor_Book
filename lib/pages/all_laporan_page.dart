@@ -71,7 +71,7 @@ class _AllLaporanState extends State<AllLaporan> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         child: GridView.builder(
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 1,
+              crossAxisCount: 2,
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
             ),

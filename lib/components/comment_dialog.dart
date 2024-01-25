@@ -35,7 +35,8 @@ class _CommentDialogState extends State<CommentDialog> {
       _isLoading = true;
     });
     try {
-      CollectionReference laporanCollection = _firestore.collection('laporan');
+      CollectionReference laporanCollection =
+          _firestore.collection('laporanbaru');
 
       Timestamp timestamp = Timestamp.fromDate(DateTime.now());
 

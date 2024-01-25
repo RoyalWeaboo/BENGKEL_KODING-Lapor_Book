@@ -60,6 +60,8 @@ class _RegisterPageState extends State<RegisterPage> {
           'role': 'user',
         });
 
+        final snackbar = SnackBar(content: Text("Akun terdaftar"));
+        ScaffoldMessenger.of(context).showSnackBar(snackbar);
         Navigator.pushReplacementNamed(
           context,
           '/login',

@@ -64,7 +64,10 @@ class _ListItemState extends State<ListItem> {
                 context: context,
                 builder: (BuildContext context) {
                   return AlertDialog(
-                    title: Text('Delete ${widget.laporan.judul}?'),
+                    title: Text(
+                      'Delete ${widget.laporan.judul}?',
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     actions: [
                       TextButton(
                         onPressed: () {
@@ -150,18 +153,11 @@ class _ListItemState extends State<ListItem> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
-                          Icons.date_range,
-                          color: Colors.white,
-                          size: 16,
-                        ),
-                        const SizedBox(
-                          width: 8,
-                        ),
                         Text(
                           DateFormat('dd/MM/yyyy')
                               .format(widget.laporan.tanggal),
                           style: headerStyle(level: 5, dark: false),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
