@@ -3,4 +3,10 @@ import 'package:lapor_book/components/styles.dart';
 
 List<String> dataStatus = ['Posted', 'On Process', 'Done'];
 List<Color> warnaStatus = [warningColor, dangerColor, successColor];
-List<String> dataInstansi = ['Pembangunan', 'Jalanan', 'Pendidikan'];
+List<String> dataInstansi = [
+  'Pembangunan',
+  'Jalanan',
+  'Pendidikan',
+  'Pariwisata',
+  'Kebudayaan'
+];
